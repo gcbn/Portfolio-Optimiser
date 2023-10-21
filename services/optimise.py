@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 import scipy.optimize as opt
@@ -96,7 +98,6 @@ def efficient_frontier(stock_data, target_return, w_bounds=(0,1)):
                           bounds=tuple(w_bounds for _ in range(len(mean_returns))),
                           constraints=constraints,
                           )
-    print(1)
     efficient_variance = result['fun']
     efficient_weights = result['x']
     efficient_return, _ , efficient_std = util.portfolio_stats(stock_data, efficient_weights)
@@ -134,8 +135,15 @@ def plot_efficient_frontier(stock_data):
                                marker=dict(color=symbol_stats["sharpe"], symbol='cross', size=10, line=dict(width=1)),
                                text=symbols, ))
 
-    target_rets = np.arange(min(returns), max(returns)+0.005,0.005)
-    efficient_vars = np.array([efficient_frontier(stock_data, target_return=x, w_bounds=(0,1))[3] for x in target_rets])
+    start, end = min(returns), max(returns)
+    increment = (end-start)/25
+    target_rets = np.arange(start, end+increment, increment)
+    efficient_vars = np.array([])
+    cnt = 0
+    for x in target_rets:
+        efficient_vars = np.append(efficient_vars, efficient_frontier(stock_data, target_return=x, w_bounds=(0,1))[3])
+        cnt += 1
+        print(str(5*round(((cnt-1)/len(target_rets)*100)/5)) + "% completed")
 
     fig.add_trace(go.Scattergl(name="Portfolios", x=efficient_vars, y=target_rets))
 
@@ -152,5 +160,17 @@ def plot_efficient_frontier(stock_data):
                                mode='markers'))
 
 
-    fig.show()
+    #fig.show()
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    return graphJSON
 
+
+def opt_weights(stock_data):
+    opt_sharpe, opt_weights, opt_return, opt_variance, opt_std = optimize_sharpe_ratio(stock_data,
+         risk_free_rate=0, w_bounds=(0, 1))
+
+    # Minimum Variance
+    min_var_sharpe, min_var_weights, min_var_return, min_var_variance, min_var_std = minimize_portfolio_variance(stock_data,
+     w_bounds=(0, 1))
+
+    return [opt_weights.tolist(), min_var_weights.tolist()]

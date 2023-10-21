@@ -1,4 +1,8 @@
+from collections import defaultdict
+from datetime import datetime
+
 import numpy as np
+import pandas as pd
 
 import yfinance as yf
 
@@ -6,6 +10,31 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from services import optimise
+
+# Get Stock Data from ticker list
+def get_data(symbols):
+    start_date = datetime(2015, 1, 1)
+    end_date = datetime.now()
+    SOURCE = 'yahoo'
+    data = yf.download(symbols, start=start_date, end=end_date)
+    return data["Adj Close"]
+
+# Stock Stats
+def stock_stats(stock_data):
+    # Individual Stock Returns
+    returns = defaultdict(str)
+    var = defaultdict(str)
+    for data in stock_data:
+        stock = stock_data[data]
+        ret = np.log(stock / stock.shift()).dropna()
+        cov_mat = ret.cov(ret)
+        mean_ret = ret.mean()
+
+        # Variance and Std. Deviation of each Symbol
+        stock_var = cov_mat
+        returns[data] = mean_ret
+        var[data] = stock_var
+    return returns, var
 
 # Portfolio Stats
 def portfolio_stats(stock_data, weights):

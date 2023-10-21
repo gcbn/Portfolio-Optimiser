@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+        <title>Stock Analysis</title>
+    {% endblock %}
+    {% block scripts %}
+    <script>
+        async function callback() {
+            const date = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            let response = await fetch("/callback/stockData?start=" + date + "&end=" + end);
+            if (response.ok) {
+                let stock_data = await response.json();
+                if (response.ok) {
+                    createStockTable(stock_data);
+                }
+            } else {
+                alert("Error: Start Date must come before End Date");
+            }
+        }
+        function createStockTable(tableData) {
+            $('#data').DataTable().destroy();
+            let table = document.getElementById('data');
+            let tableBody = document.getElementById('dataBody');
+            $("#data tbody tr").remove();
+            tableData.forEach(function(rowData) {
+            let row = document.createElement('tr');
+            rowData.forEach(function(cellData) {
+              let cell = document.createElement('td');
+              cell.appendChild(document.createTextNode(cellData));
+              row.appendChild(cell);
+            });
+            $('#data').find('tbody').append(row);
+          })
+            $('#data').DataTable().draw();
+        }
+    </script>
+    {% endblock %}
+</head>
+<body>
+{% block content %}
+    <div class="page-title">
+        <h1> Stock Analysis </h1>
+    </div>
+     <div class="rowdates">
+         <div class="columndates"> <label style="margin: auto" for="date">Start Date:</label><input type="date" id="start" name="trip-start" value="2015-01-01" min="2015-01-01" max="{{ today }}" /></div>
+        <div class="columndates"><label style="margin: auto" for="date">End Date:</label><input type="date" id="end" name="trip-start" value="{{ today }}" min="2015-01-02" max="{{ today }}" /></div>
+        <div class="columndates"> <button type="button" class="btn btn-primary" onclick="callback()">Fetch Data</button></div>
+    </div>
+    <table id="data" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Annualised Mean Returns</th>
+            <th>Annualised Variance</th>
+            <th>Annualised Sharpe Ratio</th>
+          </tr>
+        </thead>
+        <tbody id="dataBody">
+        </tbody>
+    </table>
+    <script>callback();</script>
+{% endblock %}
+</body>
+

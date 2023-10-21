@@ -1,0 +1,191 @@
+{% extends "layout.html" %}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block title %}
+        <title>Portfolio Optimisation</title>
+    {% endblock %}
+
+    {% block scripts %}
+    <script>
+        async function callback() {
+            const Stock = document.getElementById('stock');
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            var selected = Array.from(Stock.options).filter(function (option) {
+                return option.selected;
+            }).map(function (option) {
+                return option.value;
+            });
+            //return;
+            let response2 = await fetch("/callback/getInfo?data=" + selected + "&start=" + start + "&end=" + end);
+            if (response2.ok) {
+                let opt_data = await response2.json();
+                if (response2.ok) {
+                    document.getElementById('loading').style.display = "block";
+                    info(opt_data)
+                    createOptTable(opt_data[0])
+                    createMinTable(opt_data[4])
+                    let response = await fetch("/callback/getStock?data=" + selected + "&start=" + start + "&end=" + end);
+                    if (response.ok) {
+                        let chartJson = await response.json();
+                        if (response.ok) {
+                            document.getElementById('loading').style.display = "none";
+                            Plotly.newPlot('chart', chartJson, {});
+                        }
+                    } else {
+                        alert("Plot Error: Ensure multiple tickers selected and end date not earlier than start date");
+                    }
+                }
+            } else {
+                alert("Plot Error: Ensure multiple tickers selected and end date not earlier than start date");
+            }
+
+        }
+        function info(json) {
+            let name = document.getElementById('maxRet');
+            name.innerHTML = json[1]+"%";
+            name = document.getElementById('maxVar');
+            name.innerHTML = json[2];
+            name = document.getElementById('maxSharpe');
+            name.innerHTML = json[3];
+             name = document.getElementById('minRet');
+            name.innerHTML = json[5]+"%";
+            name = document.getElementById('minVar');
+            name.innerHTML = json[6];
+            name = document.getElementById('minSharpe');
+            name.innerHTML = json[7];
+        }
+
+        function createOptTable(tableData) {
+            let table = document.getElementById('optWeights');
+            let tableBody = document.getElementById('optWeightsBody');
+            $("#optWeights tbody tr").remove();
+          tableData.forEach(function(rowData) {
+            let row = document.createElement('tr');
+            rowData.forEach(function(cellData) {
+              let cell = document.createElement('td');
+              cell.appendChild(document.createTextNode(cellData));
+              row.appendChild(cell);
+            });
+            tableBody.appendChild(row);
+          });
+          table.appendChild(tableBody);
+        }
+
+        function createMinTable(tableData) {
+            let table = document.getElementById('minWeights');
+            let tableBody = document.getElementById('minWeightsBody');
+            $("#minWeights tbody tr").remove();
+          tableData.forEach(function(rowData) {
+            let row = document.createElement('tr');
+            rowData.forEach(function(cellData) {
+              let cell = document.createElement('td');
+              cell.appendChild(document.createTextNode(cellData));
+              row.appendChild(cell);
+            });
+            tableBody.appendChild(row);
+          });
+          table.appendChild(tableBody);
+        }
+
+        function toggleElements(showElement, hideElement, showButton, hideButton) {
+          document.getElementById(showElement).style.display = "block";
+          document.getElementById(hideElement).style.display = "none";
+          document.getElementById(showButton).style.display = "block";
+          document.getElementById(hideButton).style.display = "none";
+        }
+    </script>
+    {% endblock %}
+</head>
+    {% block content %}
+        <div class="page-title">
+            <h1> Portfolio Creation </h1>
+        </div>
+        <div class="selector">
+        <div class="left">
+        <div class="rowdates">
+        <div class="columndates"> <label style="margin: auto" for="date">Start Date:</label><input type="date" id="start" name="trip-start" value="2015-01-01" min="2015-01-01" max="{{ today }}" /></div>
+        <div class="columndates"><label style="margin: auto" for="date">End Date:</label><input type="date" id="end" name="trip-start" value="{{ today }}" min="2015-01-02" max="{{ today }}" /></div>
+    </div>
+        <div class="col"><b>Select Stocks for Portfolio</b></div>
+        <select id="stock" class="form-select" aria-label="Select" multiple multiselect-search="true">
+            {% for s in symbols %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn btn-primary" onclick="callback()">Optimise</button>
+        <p>(There may be a slight delay for a large number of stock selections)</p>
+        <div id="chart" class="chart" style="height: 500px;border: 1px solid; margin-top: 20px;
+            box-shadow: 5px 5px 5px #888888;"></div>
+        <h1 id="loading" style="margin: auto">Loading Graph...</h1>
+        </div>
+        <div class="right">
+            <div class="buttons">
+            <button id="optbtn" style="display: none; margin: 0 auto;" onclick="toggleElements('opt', 'min', 'minbtn', 'optbtn')">Maximum Sharpe Ratio</button>
+            <button id="minbtn" style="display: block; margin: 0 auto;" onclick="toggleElements('min', 'opt', 'optbtn', 'minbtn')">Minimal Variance</button>
+            </div>
+            <div id="opt">
+            <table id="optTable" class="table table-striped" style="padding-bottom: 15px">
+                <caption style="caption-side:top"><p style="font-size: 25px">Portfolio with Maximum Sharpe Ratio</p></caption>
+                <thead>
+                  <tr>
+                    <th>Annualised Mean Returns</th>
+                    <th>Annualised Variance</th>
+                    <th>Annualised Sharpe Ratio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                      <td id="maxRet"></td>
+                      <td id="maxVar"></td>
+                      <td id="maxSharpe"></td>
+                  </tr>
+                </tbody>
+            </table>
+           <table id="optWeights" class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Ticker</th>
+                    <th>Weighting</th>
+                  </tr>
+                </thead>
+                <tbody id="optWeightsBody">
+                </tbody>
+            </table>
+            </div>
+            <div id="min" style="display: none">
+            <table id="minTable" class="table table-striped">
+                <caption style="caption-side:top"><p style="font-size: 25px">Portfolio with Minimum Variance</p></caption>
+                <thead>
+                  <tr>
+                    <th>Annualised Mean Returns</th>
+                    <th>Annualised Variance</th>
+                    <th>Annualised Sharpe Ratio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                      <td id="minRet"></td>
+                      <td id="minVar"></td>
+                      <td id="minSharpe"></td>
+                  </tr>
+                </tbody>
+            </table>
+           <table id="minWeights" class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Ticker</th>
+                    <th>Weighting</th>
+                  </tr>
+                </thead>
+                <tbody id="minWeightsBody">
+                  <tr>
+                  </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        </div>
+    {% endblock %}
+</body>
