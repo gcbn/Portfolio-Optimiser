@@ -31,15 +31,11 @@ def monte_carlo(stock_data, num_iter=10000):
     symbols = stock_data.columns.values
 
     rets = []
+    rets, cov = util.calc_returns_stats(stock_data)
     for i in range(1, num_iter + 1):
         rand_weights = np.random.random(len(symbols))
         rand_weights = rand_weights / np.sum(rand_weights)
-        porfolio_ret, porfolio_var, portfolio_std = util.portfolio_stats(stock_data, rand_weights)
-
-        # Plotting Returns on 1M
-        # if ((i / num_iter) * 100) % 5 == 0:
-        #     plot_ret = portfolio_returns(data, rand_weights)
-        #     rets.append(plot_ret)
+        porfolio_ret, porfolio_var, portfolio_std = util.portfolio_stats(rets, cov, rand_weights)
 
         # Annualizing
         porfolio_ret = porfolio_ret * 252
@@ -72,14 +68,12 @@ def monte_carlo(stock_data, num_iter=10000):
     mc_plot["weights"] = w_list
     mc_plot["Special"] = mc_plot['sharpe'] == max_sharpe
 
-    # plot_returns(rets)
-
     return mc_plot, max_sharpe, max_sharpe_ret, max_sharpe_var, max_sharpe_w, min_vol_sharpe, min_vol_ret, min_vol_var, min_vol_w
 
 def plot_mc(stock_data):
     # spy = yf.download("SPY", start=list(stock_data.index)[0], end=list(stock_data.index)[-1])
     # spy = spy["Adj Close"]
-    mc = monte_carlo(stock_data)
+    mc = monte_carlo(stock_data, 10000000)
     mc_plot = mc[0]
 
     # PORTFOLIOS
@@ -94,11 +88,12 @@ def plot_mc(stock_data):
     returns = []
     vars = []
     sharpes = []
+    mean_rets, cov_mat = util.calc_returns_stats(stock_data)
     for i in range(len(symbols)):
         weights = [0 for n in range(len(symbols))]
         weights[i] = 1
         weights = np.array(weights)
-        s_ret, s_var, s_std = util.portfolio_stats(stock_data, weights=weights)
+        s_ret, s_var, s_std = util.portfolio_stats(mean_rets, cov_mat, weights=weights)
         s_ret = s_ret * 252
         s_var = s_var * 252
         s_std = s_std * (252 ** 0.5)

@@ -36,13 +36,14 @@ def stock_stats(stock_data):
         var[data] = stock_var
     return returns, var
 
-# Portfolio Stats
-def portfolio_stats(stock_data, weights):
-    # Individual Stock Returns
+def calc_returns_stats(stock_data):
     ret = np.log(stock_data / stock_data.shift()).dropna()
-    cov_mat = ret.cov()
-    mean_ret = ret.mean()
+    mean_returns = ret.mean()
+    cov_matrix = ret.cov()
+    return mean_returns, cov_matrix
 
+# Portfolio Stats
+def portfolio_stats(mean_ret, cov_mat, weights):
     # Weight * Avg Return for each Symbol in Portfolio
     portfolio_return = np.dot(weights.reshape(1, -1), mean_ret.values.reshape(-1, 1))
 
@@ -94,5 +95,5 @@ def print_results(stock_data, sr, ret, vol, weights):
     print("Annual Sharpe Ratio: " + str(round(sr, 4)) + " | Annual Return: " + str(
         round(ret * 100, 2)) +
           "% | Annual Volatility: " + str(round(vol * 100, 4)) + "%")
-    for i in range(len(stock_data.columns.values)):
-        print(stock_data.columns.values[i] + ": " + str(round(weights[i] * 100, 2)) + "%")
+    # for i in range(len(stock_data.columns.values)):
+    #     print(stock_data.columns.values[i] + ": " + str(round(weights[i] * 100, 2)) + "%")

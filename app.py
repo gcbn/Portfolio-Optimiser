@@ -65,11 +65,12 @@ def cb(endpoint):
         end = request.args.get('end')
         data1 = data[start:end]
         weights = optimise.opt_weights(data1[syms])
-        p1r, p1v, p1d = util.portfolio_stats(data1[syms], np.array(weights[0]))
+        mean_rets, cov_mat = util.calc_returns_stats(data1[syms])
+        p1r, p1v, p1d = util.portfolio_stats(mean_rets, cov_mat, np.array(weights[0]))
         p1s = round((p1r/p1d)*(252**0.5), 3)
         p1r = round(p1r*252*100, 2)
         p1v = round(p1v*252, 3)
-        p2r, p2v, p2d = util.portfolio_stats(data1[syms], np.array(weights[1]))
+        p2r, p2v, p2d = util.portfolio_stats(mean_rets, cov_mat, np.array(weights[1]))
         p2s = round((p2r/p2d)*(252**0.5), 3)
         p2r = round(p2r*252*100, 2)
         p2v = round(p2v*252, 3)
@@ -91,3 +92,7 @@ def cb(endpoint):
         return tableformat
     else:
         return "Bad endpoint", 400
+
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=80)
