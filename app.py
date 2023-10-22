@@ -1,23 +1,11 @@
-from ast import literal_eval
 from collections import defaultdict
 
 from flask import Flask, render_template, request
 
-import json
-
 import numpy as np
-import pandas as pd
 
 from datetime import datetime
 import yfinance as yf
-
-import plotly.graph_objects as go
-import plotly
-from plotly.subplots import make_subplots
-from plotly_resampler import FigureResampler, FigureWidgetResampler
-import plotly.express as px
-
-import scipy.optimize as opt
 
 from services import optimise, util
 

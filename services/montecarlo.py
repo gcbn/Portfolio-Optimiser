@@ -7,7 +7,7 @@ import plotly
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from services import util, optimise
+from services import util
 
 
 def monte_carlo(stock_data, num_iter=10000):

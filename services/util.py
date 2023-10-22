@@ -2,14 +2,12 @@ from collections import defaultdict
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
 
 import yfinance as yf
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from services import optimise
 
 # Get Stock Data from ticker list
 def get_data(symbols):

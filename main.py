@@ -2,7 +2,7 @@
 from ast import literal_eval
 from datetime import datetime
 import yfinance as yf
-from services import util, montecarlo, optimise
+from services import util, montecarlo
 
 # Portfolio Stocks
 with open('tickers.txt') as my_file:
