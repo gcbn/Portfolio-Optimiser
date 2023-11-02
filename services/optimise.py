@@ -14,17 +14,33 @@ from services import util
 # SciPy Optimise
 # Functions to minimize
 def neg_sharpe_ratio(weights, mean_rets, cov_mat, risk_free_rate=0):
+    """
+    :param risk_free_rate: Risk Free Rate of Portfolio
+    :param weights: Stock Weightings in Portfolio
+    :param mean_rets: Mean Returns of each stock in portfolio
+    :param cov_mat: Covariance Matrix for stocks in portfolio
+    :return: -Sharpe Ratio of a Portfolio with given weights
+    """
     portfolio_return, portfolio_var, portfolio_std = util.portfolio_stats(mean_rets, cov_mat, weights)
     sr = ((portfolio_return - risk_free_rate) / portfolio_std) * (252 ** 0.5)
     return -sr
 
 
 def portfolio_variance(weights, mean_rets, cov_mat):
+    """
+    :param weights: Stock Weightings in Portfolio
+    :param mean_rets: Mean Returns of each stock in portfolio
+    :param cov_mat: Covariance Matrix for stocks in portfolio
+    :return: Variance of a Portfolio with given weights
+    """
     portfolio_return, portfolio_var, portfolio_std = util.portfolio_stats(mean_rets, cov_mat, weights)
     return portfolio_var * 252
 
 
 def optimize_sharpe_ratio(mean_rets, cov_mat, risk_free_rate=0, w_bounds=(0, 1)):
+    """
+    :return: Portfolio with maximised Sharpe Ratio.
+    """
     n = len(mean_rets)
     init_guess = np.array([1 / n for _ in range(n)])
     args = (mean_rets, cov_mat, risk_free_rate)
@@ -52,6 +68,9 @@ def optimize_sharpe_ratio(mean_rets, cov_mat, risk_free_rate=0, w_bounds=(0, 1))
 
 
 def minimize_portfolio_variance(mean_rets, cov_mat, w_bounds=(0, 1)):
+    """
+    :return: Portfolio with minimum Variance.
+    """
     n = len(mean_rets)
     init_guess = np.array([1 / n for _ in range(n)])
     args = (mean_rets, cov_mat)
@@ -80,8 +99,10 @@ def minimize_portfolio_variance(mean_rets, cov_mat, w_bounds=(0, 1)):
 
 
 def efficient_frontier(mean_rets, cov_mat, target_return, w_bounds=(0, 1)):
+    """
+    :return: Portfolio with maximum Sharpe Ratio for given target mean return.
+    """
     n = len(mean_rets)
-
     init_guess = np.array([1 / n for _ in range(n)])
     args = (mean_rets, cov_mat)
     constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1},
@@ -103,6 +124,9 @@ def efficient_frontier(mean_rets, cov_mat, target_return, w_bounds=(0, 1)):
 
 
 def plot_efficient_frontier(stock_data):
+    """
+    :return: JSON data for Plotly Graph depicting curve of Optimal Sharpe Ratio Porfolios across span of possible returns.
+    """
     fig = make_subplots()
 
     # SYMBOLS
@@ -112,6 +136,7 @@ def plot_efficient_frontier(stock_data):
     vars = []
     sharpes = []
     mean_rets, cov_mat = util.calc_returns_stats(stock_data)
+
     for i in range(len(symbols)):
         weights = [0 for n in range(len(symbols))]
         weights[i] = 1
@@ -166,6 +191,9 @@ def plot_efficient_frontier(stock_data):
 
 
 def opt_weights(stock_data):
+    """
+    :return: Weights of Stocks in Portfolio achieving maximum Sharpe Ratio and minimum Variance
+    """
     mean_rets, cov_mat = util.calc_returns_stats(stock_data)
     opt_sharpe, opt_weights, opt_return, opt_variance, opt_std = optimize_sharpe_ratio(mean_rets, cov_mat,
                                                                                        risk_free_rate=0,

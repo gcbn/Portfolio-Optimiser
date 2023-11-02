@@ -1,11 +1,12 @@
-""" IMPORTS """
 from ast import literal_eval
 from datetime import datetime
 import yfinance as yf
 from services import util, montecarlo
 
+# FILE TO TEST NEW FUNCTIONS / FEATURES
+
 # Portfolio Stocks
-with open('tickers.txt') as my_file:
+with open('../tickers.txt') as my_file:
     symbols = my_file.readlines()
 symbols = literal_eval(symbols[0])
 # Custom Tickers

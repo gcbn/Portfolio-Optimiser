@@ -11,6 +11,9 @@ from services import util
 
 
 def monte_carlo(stock_data, num_iter=10000):
+    """
+    :return: Data of all portfolios and estimated optimal portfolios from num_iter simulations of portfolios created with random weightings.
+    """
     mc_plot = pd.DataFrame([])
 
     porfolio_var_list = []
@@ -71,6 +74,9 @@ def monte_carlo(stock_data, num_iter=10000):
     return mc_plot, max_sharpe, max_sharpe_ret, max_sharpe_var, max_sharpe_w, min_vol_sharpe, min_vol_ret, min_vol_var, min_vol_w
 
 def plot_mc(stock_data):
+    """
+    :return: JSON data for Plotly Graph of Monte-Carlo generated portfolios
+    """
     # spy = yf.download("SPY", start=list(stock_data.index)[0], end=list(stock_data.index)[-1])
     # spy = spy["Adj Close"]
     mc = monte_carlo(stock_data, 10000000)
